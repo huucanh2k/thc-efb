@@ -10,15 +10,15 @@ export function AccountCard({ account }: { account: PublicAccount }) {
 
   return (
     <Link href={`/accounts/${account.id}`} className="group w-full overflow-hidden">
-      <div className="overflow-hidden w-full h-full flex flex-col rounded-2xl border border-slate-200 bg-white transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-        <div className="relative aspect-16/7 bg-gradient-to-br from-slate-100 to-slate-200">
+      <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+        <div className="relative aspect-video bg-linear-to-br from-slate-100 to-slate-200">
           {thumbnail ? (
             <Image
               src={thumbnail}
               alt={account.title}
-              width={1600}
-              height={700}
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              fill
+              sizes="(min-width: 1280px) 380px, (min-width: 768px) 50vw, 100vw"
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full items-center justify-center">
