@@ -24,7 +24,7 @@ export default async function HomePage() {
         {/* Hero */}
         <section className="gradient-bg relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDE4YzAtOS45NC04LjA2LTE4LTE4LTE4UzAgOC4wNiAwIDE4czguMDYgMTggMTggMTggMTgtOC4wNiAxOC0xOCIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
-          <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+          <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-28 lg:px-8">
             <div className="text-center">
               <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600/20 ring-1 ring-indigo-500/30">
                 <Gamepad2 className="h-8 w-8 text-indigo-400" />
@@ -34,9 +34,7 @@ export default async function HomePage() {
                 <span className="block text-indigo-400">Chất Lượng Cao</span>
               </h1>
               <p className="mx-auto mt-4 max-w-xl text-lg text-slate-300">
-                Tìm kiếm đội hình hoàn hảo của bạn. Những tài khoản xịn với lực
-                chiến đội hình siêu khủng, nhiều GP vàng, và đa dạng cầu thủ
-                hiếm.
+                Tìm kiếm tài khoản phù hợp với nhu cầu của bạn.
               </p>
             </div>
           </div>
