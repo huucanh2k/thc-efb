@@ -1,5 +1,5 @@
-export const CONTACT_ZALO_URL = 'https://zalo.me/YOUR_ZALO_ID';
-export const CONTACT_MESSENGER_URL = 'https://m.me/YOUR_FB_PAGE';
+export const CONTACT_ZALO_URL = 'https://zalo.me/0969347283';
+export const CONTACT_MESSENGER_URL = 'https://www.facebook.com/share/1B7kgySoVd/?mibextid=wwXIfr';
 
 export const STATUS_COLORS: Record<string, string> = {
   Available: 'bg-emerald-100 text-emerald-800',

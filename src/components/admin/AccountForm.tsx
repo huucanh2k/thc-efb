@@ -1,39 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { ArrowLeft, Loader2, Plus, X, UploadCloud, Star } from "lucide-react";
 import Link from "next/link";
 import type { Account, Email, AccountStatus } from "@/types/database";
+import { useForm } from "react-hook-form";
 
 interface AccountFormProps {
   account?: Account | null;
 }
 
+type AccountFormValues = {
+  title: string;
+  purchasePrice: string;
+  sellingPrice: string;
+  status: AccountStatus;
+  totalGp: string;
+  totalCoinsAndroid: string;
+  totalCoinsIos: string;
+  teamStrength: string;
+  emailId: string;
+};
+
 export function AccountForm({ account }: AccountFormProps) {
   const isEditing = !!account;
-  const [title, setTitle] = useState(account?.title ?? "");
-  const [purchasePrice, setPurchasePrice] = useState(
-    account?.purchase_price?.toString() ?? "",
-  );
-  const [sellingPrice, setSellingPrice] = useState(
-    account?.selling_price?.toString() ?? "",
-  );
-  const [status, setStatus] = useState<AccountStatus>(
-    account?.status ?? "Available",
-  );
-  const [totalGp, setTotalGp] = useState(account?.total_gp?.toString() ?? "");
-  const [totalCoinsAndroid, setTotalCoinsAndroid] = useState(
-    account?.total_coins_android?.toString() ?? "",
-  );
-  const [totalCoinsIos, setTotalCoinsIos] = useState(
-    account?.total_coins_ios?.toString() ?? "",
-  );
-  const [teamStrength, setTeamStrength] = useState(
-    account?.team_strength?.toString() ?? "",
-  );
-  const [emailId, setEmailId] = useState(account?.email_id ?? "");
   const [images, setImages] = useState<string[]>(account?.images ?? []);
   const [primaryImage, setPrimaryImage] = useState<string | null>(
     account?.primary_image_url ?? (account?.images?.[0] || null),
@@ -46,6 +38,34 @@ export function AccountForm({ account }: AccountFormProps) {
 
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
+
+  const defaultValues = useMemo<AccountFormValues>(
+    () => ({
+      title: account?.title ?? "",
+      purchasePrice: account?.purchase_price?.toString() ?? "",
+      sellingPrice: account?.selling_price?.toString() ?? "",
+      status: account?.status ?? "Available",
+      totalGp: account?.total_gp?.toString() ?? "",
+      totalCoinsAndroid: account?.total_coins_android?.toString() ?? "",
+      totalCoinsIos: account?.total_coins_ios?.toString() ?? "",
+      teamStrength: account?.team_strength?.toString() ?? "",
+      emailId: account?.email_id ?? "",
+    }),
+    [account],
+  );
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<AccountFormValues>({
+    defaultValues,
+  });
+
+  useEffect(() => {
+    reset(defaultValues);
+  }, [defaultValues, reset]);
 
   useEffect(() => {
     const fetchEmails = async () => {
@@ -124,8 +144,7 @@ export function AccountForm({ account }: AccountFormProps) {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: AccountFormValues) => {
     setLoading(true);
     setError("");
 
@@ -177,15 +196,15 @@ export function AccountForm({ account }: AccountFormProps) {
       }
 
       const payload = {
-        title,
-        purchase_price: parseFloat(purchasePrice) || 0,
-        selling_price: parseFloat(sellingPrice) || 0,
-        status,
-        total_gp: parseInt(totalGp) || 0,
-        total_coins_android: parseInt(totalCoinsAndroid) || 0,
-        total_coins_ios: parseInt(totalCoinsIos) || 0,
-        team_strength: parseInt(teamStrength) || 0,
-        email_id: emailId || null,
+        title: values.title,
+        purchase_price: values.purchasePrice,
+        selling_price: values.sellingPrice,
+        status: values.status,
+        total_gp: parseInt(values.totalGp) || 0,
+        total_coins_android: parseInt(values.totalCoinsAndroid) || 0,
+        total_coins_ios: parseInt(values.totalCoinsIos) || 0,
+        team_strength: parseInt(values.teamStrength) || 0,
+        email_id: values.emailId || null,
         images: finalImages,
         primary_image_url: finalPrimaryUrl,
       };
@@ -225,7 +244,7 @@ export function AccountForm({ account }: AccountFormProps) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-6">
           {/* Title */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -233,12 +252,14 @@ export function AccountForm({ account }: AccountFormProps) {
             </label>
             <input
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
+              {...register("title", { required: "Vui lòng nhập tiêu đề" })}
+              aria-invalid={!!errors.title}
               className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               placeholder="ví dụ: Tài khoản Android Cực VIP - Lực Chiến 5000+"
             />
+            {errors.title && (
+              <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>
+            )}
           </div>
 
           {/* Prices */}
@@ -248,26 +269,40 @@ export function AccountForm({ account }: AccountFormProps) {
                 Giá Nhập (VNĐ)
               </label>
               <input
-                type="number"
-                value={purchasePrice}
-                onChange={(e) => setPurchasePrice(e.target.value)}
-                required
+                {...register("purchasePrice", {
+                  required: "Vui lòng nhập giá nhập",
+                  min: { value: 0, message: "Giá nhập phải >= 0" },
+                })}
+                aria-invalid={!!errors.purchasePrice}
                 min="0"
+                step="1"
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               />
+              {errors.purchasePrice && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.purchasePrice.message}
+                </p>
+              )}
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
                 Giá Bán (VNĐ)
               </label>
               <input
-                type="number"
-                value={sellingPrice}
-                onChange={(e) => setSellingPrice(e.target.value)}
-                required
+                {...register("sellingPrice", {
+                  required: "Vui lòng nhập giá bán",
+                  min: { value: 0, message: "Giá bán phải >= 0" },
+                })}
+                aria-invalid={!!errors.sellingPrice}
                 min="0"
+                step="1"
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               />
+              {errors.sellingPrice && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.sellingPrice.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -277,8 +312,7 @@ export function AccountForm({ account }: AccountFormProps) {
               Trạng Thái
             </label>
             <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as AccountStatus)}
+              {...register("status")}
               className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
             >
               <option value="Available">Sẵn Sàng</option>
@@ -294,48 +328,70 @@ export function AccountForm({ account }: AccountFormProps) {
                 Tổng GP
               </label>
               <input
-                type="number"
-                value={totalGp}
-                onChange={(e) => setTotalGp(e.target.value)}
+                {...register("totalGp", {
+                  min: { value: 0, message: "Tổng GP phải >= 0" },
+                })}
+                aria-invalid={!!errors.totalGp}
                 min="0"
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               />
+              {errors.totalGp && (
+                <p className="mt-1 text-xs text-red-600">{errors.totalGp.message}</p>
+              )}
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
                 Coins (Android)
               </label>
               <input
-                type="number"
-                value={totalCoinsAndroid}
-                onChange={(e) => setTotalCoinsAndroid(e.target.value)}
+                {...register("totalCoinsAndroid", {
+                  min: { value: 0, message: "Coins (Android) phải >= 0" },
+                })}
+                aria-invalid={!!errors.totalCoinsAndroid}
                 min="0"
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               />
+              {errors.totalCoinsAndroid && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.totalCoinsAndroid.message}
+                </p>
+              )}
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
                 Coins (iOS)
               </label>
               <input
-                type="number"
-                value={totalCoinsIos}
-                onChange={(e) => setTotalCoinsIos(e.target.value)}
+                {...register("totalCoinsIos", {
+                  min: { value: 0, message: "Coins (iOS) phải >= 0" },
+                })}
+                aria-invalid={!!errors.totalCoinsIos}
                 min="0"
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               />
+              {errors.totalCoinsIos && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.totalCoinsIos.message}
+                </p>
+              )}
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-slate-700">
                 Lực Chiến Đội Hình
               </label>
               <input
-                type="number"
-                value={teamStrength}
-                onChange={(e) => setTeamStrength(e.target.value)}
+                {...register("teamStrength", {
+                  min: { value: 0, message: "Lực chiến phải >= 0" },
+                })}
+                aria-invalid={!!errors.teamStrength}
                 min="0"
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               />
+              {errors.teamStrength && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.teamStrength.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -348,8 +404,7 @@ export function AccountForm({ account }: AccountFormProps) {
               </span>
             </label>
             <select
-              value={emailId}
-              onChange={(e) => setEmailId(e.target.value)}
+              {...register("emailId")}
               className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
             >
               <option value="">Không có email liên kết</option>

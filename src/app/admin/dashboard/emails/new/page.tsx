@@ -5,25 +5,36 @@ import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+
+type EmailFormValues = {
+  emailAddress: string;
+  password: string;
+  recoveryInfo: string;
+};
 
 export default function NewEmailPage() {
-  const [emailAddress, setEmailAddress] = useState("");
-  const [password, setPassword] = useState("");
-  const [recoveryInfo, setRecoveryInfo] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<EmailFormValues>({
+    defaultValues: { emailAddress: "", password: "", recoveryInfo: "" },
+  });
+
+  const onSubmit = async (values: EmailFormValues) => {
     setLoading(true);
     setError("");
 
     const { error: err } = await supabase.from("emails").insert({
-      email_address: emailAddress,
-      password,
-      recovery_info: recoveryInfo || null,
+      email_address: values.emailAddress,
+      password: values.password,
+      recovery_info: values.recoveryInfo || null,
     });
 
     if (err) {
@@ -57,19 +68,25 @@ export default function NewEmailPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
               Địa chỉ Email
             </label>
             <input
               type="email"
-              value={emailAddress}
-              onChange={(e) => setEmailAddress(e.target.value)}
-              required
+              {...register("emailAddress", {
+                required: "Vui lòng nhập email",
+              })}
+              aria-invalid={!!errors.emailAddress}
               className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               placeholder="account@example.com"
             />
+            {errors.emailAddress && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.emailAddress.message}
+              </p>
+            )}
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -77,20 +94,23 @@ export default function NewEmailPage() {
             </label>
             <input
               type="text"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              {...register("password", {
+                required: "Vui lòng nhập mật khẩu",
+              })}
+              aria-invalid={!!errors.password}
               className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               placeholder="Mật khẩu của email"
             />
+            {errors.password && (
+              <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>
+            )}
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
               Thông tin khôi phục
             </label>
             <textarea
-              value={recoveryInfo}
-              onChange={(e) => setRecoveryInfo(e.target.value)}
+              {...register("recoveryInfo")}
               className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               placeholder="Số điện thoại khôi phục, câu hỏi bảo mật, v.v."
               rows={3}

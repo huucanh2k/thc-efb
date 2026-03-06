@@ -13,7 +13,7 @@ export default async function AccountsPage() {
     .from("accounts")
     .select("*, emails(*)")
     .order("created_at", { ascending: false });
-
+    
   const items = (accounts ?? []) as AccountWithEmail[];
 
   return (
