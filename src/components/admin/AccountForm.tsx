@@ -144,6 +144,32 @@ export function AccountForm({ account }: AccountFormProps) {
     }
   };
 
+  const addImageFiles = (files: File[]) => {
+    const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+    if (imageFiles.length === 0) return;
+    setSelectedFiles((prev) => [...prev, ...imageFiles]);
+    const newPreviews = imageFiles.map((f) => URL.createObjectURL(f));
+    setPreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const onPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const files = Array.from(e.clipboardData.files);
+    addImageFiles(files);
+  };
+
+  // Also listen globally so paste works without focusing the drop zone
+  useEffect(() => {
+    const handleWindowPaste = (e: ClipboardEvent) => {
+      // Only handle if not typing in an input/textarea/select
+      const tag = (e.target as HTMLElement).tagName;
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
+      const files = Array.from(e.clipboardData?.files ?? []);
+      addImageFiles(files);
+    };
+    window.addEventListener("paste", handleWindowPaste);
+    return () => window.removeEventListener("paste", handleWindowPaste);
+  }, []);
+
   const onSubmit = async (values: AccountFormValues) => {
     setLoading(true);
     setError("");
@@ -258,7 +284,9 @@ export function AccountForm({ account }: AccountFormProps) {
               placeholder="ví dụ: Tài khoản Android Cực VIP - Lực Chiến 5000+"
             />
             {errors.title && (
-              <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>
+              <p className="mt-1 text-xs text-red-600">
+                {errors.title.message}
+              </p>
             )}
           </div>
 
@@ -336,7 +364,9 @@ export function AccountForm({ account }: AccountFormProps) {
                 className="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               />
               {errors.totalGp && (
-                <p className="mt-1 text-xs text-red-600">{errors.totalGp.message}</p>
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.totalGp.message}
+                </p>
               )}
             </div>
             <div>
@@ -422,11 +452,13 @@ export function AccountForm({ account }: AccountFormProps) {
               Hình Ảnh
             </label>
 
-            {/* Drag & Drop Area */}
+            {/* Drag & Drop + Paste Area */}
             <div
               onDragOver={onDragOver}
               onDrop={onDrop}
-              className="mt-1 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 px-6 py-8 transition-colors hover:border-indigo-500 hover:bg-slate-50 relative"
+              onPaste={onPaste}
+              tabIndex={0}
+              className="mt-1 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 px-6 py-8 transition-colors hover:border-indigo-500 hover:bg-slate-50 relative outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
             >
               <UploadCloud
                 className="mb-3 h-10 w-10 text-slate-400"
@@ -453,6 +485,16 @@ export function AccountForm({ account }: AccountFormProps) {
               <p className="text-xs leading-5 text-slate-500 mt-1">
                 PNG, JPG, GIF tối đa 5MB
               </p>
+              <p className="mt-2 flex items-center gap-1 text-xs text-slate-400">
+                <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-500 shadow-sm">
+                  Ctrl
+                </kbd>
+                +
+                <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-500 shadow-sm">
+                  V
+                </kbd>
+                để dán ảnh từ clipboard
+              </p>
             </div>
 
             {/* Existing & New Images Preview */}
@@ -462,10 +504,11 @@ export function AccountForm({ account }: AccountFormProps) {
                 {images.map((img, i) => (
                   <div
                     key={`existing-${i}`}
-                    className={`relative aspect-video rounded-xl border-2 bg-slate-50 shadow-sm overflow-hidden ${primaryImage === img
-                      ? "border-indigo-500"
-                      : "border-slate-200"
-                      }`}
+                    className={`relative aspect-video rounded-xl border-2 bg-slate-50 shadow-sm overflow-hidden ${
+                      primaryImage === img
+                        ? "border-indigo-500"
+                        : "border-slate-200"
+                    }`}
                   >
                     {primaryImage === img && (
                       <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-md bg-indigo-600/90 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white shadow-sm backdrop-blur-sm">
@@ -505,10 +548,11 @@ export function AccountForm({ account }: AccountFormProps) {
                 {previews.map((preview, i) => (
                   <div
                     key={`new-${i}`}
-                    className={`relative aspect-video rounded-xl border-2 bg-slate-50 shadow-sm overflow-hidden ${primaryImage === preview
-                      ? "border-indigo-500"
-                      : "border-slate-200"
-                      }`}
+                    className={`relative aspect-video rounded-xl border-2 bg-slate-50 shadow-sm overflow-hidden ${
+                      primaryImage === preview
+                        ? "border-indigo-500"
+                        : "border-slate-200"
+                    }`}
                   >
                     {primaryImage === preview ? (
                       <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-md bg-indigo-600/90 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white shadow-sm backdrop-blur-sm">
