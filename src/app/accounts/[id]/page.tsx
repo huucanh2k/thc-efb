@@ -20,7 +20,64 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import type { PublicAccount } from "@/types/database";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createSupabaseServerClient();
+
+  // Try public first, fallback to sold
+  const { data: pub } = await supabase
+    .from("public_accounts")
+    .select("title, selling_price, primary_image_url, status")
+    .eq("id", id)
+    .single();
+
+  const { data: sold } = !pub
+    ? await supabase
+        .from("accounts")
+        .select("title, selling_price, primary_image_url, status")
+        .eq("id", id)
+        .single()
+    : { data: null };
+
+  const account = pub ?? sold;
+  if (!account) return {};
+
+  const isSold = account.status === "Sold";
+  const title = isSold ? `[Đã Bán] ${account.title}` : account.title;
+  const description = isSold
+    ? `Tài khoản ${account.title} đã được bán. Xem các tài khoản khác đang sẵn sàng tại THC eFootball Shop.`
+    : `Mua ngay tài khoản ${account.title} với giá ${formatCurrency(account.selling_price)}. Giao dịch nhanh, uy tín tại THC eFootball Shop.`;
+  const image = account.primary_image_url ?? undefined;
+
+  return {
+    title,
+    description,
+    robots: isSold
+      ? { index: false, follow: false }
+      : { index: true, follow: true },
+    openGraph: {
+      title,
+      description,
+      url: `/accounts/${id}`,
+      images: image
+        ? [{ url: image, width: 1200, height: 630, alt: account.title }]
+        : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : [],
+    },
+  };
+}
 
 export default async function AccountDetailPage({
   params,

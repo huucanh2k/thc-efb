@@ -4,9 +4,21 @@ import { Footer } from "@/components/storefront/Footer";
 import { AccountCard } from "@/components/storefront/AccountCard";
 import { SoldAccountCard } from "@/components/storefront/SoldAccountCard";
 import { Gamepad2, Search, BadgeCheck } from "lucide-react";
+import type { Metadata } from "next";
 import type { PublicAccount } from "@/types/database";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Cửa Hàng Tài Khoản eFootball",
+  description:
+    "Khám phá hàng trăm tài khoản eFootball Mobile chất lượng cao, giá tốt. Android & iOS, cập nhật mỗi ngày.",
+  openGraph: {
+    title: "Cửa Hàng Tài Khoản eFootball | THC Shop",
+    description: "Khám phá tài khoản eFootball Mobile chất lượng cao, giá tốt.",
+    url: "/",
+  },
+};
 
 export default async function HomePage() {
   const supabase = await createSupabaseServerClient();
