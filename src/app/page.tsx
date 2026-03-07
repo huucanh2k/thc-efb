@@ -3,11 +3,13 @@ import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { AccountCard } from "@/components/storefront/AccountCard";
 import { SoldAccountCard } from "@/components/storefront/SoldAccountCard";
+import { AccountFilters } from "@/components/storefront/AccountFilters";
 import { Gamepad2, Search, BadgeCheck } from "lucide-react";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import type { PublicAccount } from "@/types/database";
 
-export const revalidate = 60;
+export const revalidate = 0; // dynamic because filters change per request
 
 export const metadata: Metadata = {
   title: "Cửa Hàng Tài Khoản eFootball",
@@ -20,14 +22,50 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function HomePage() {
+type SearchParams = {
+  sort?: string;
+  minPrice?: string;
+  maxPrice?: string;
+};
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+  const sort = params.sort ?? "newest";
+  const minPrice = params.minPrice ? parseFloat(params.minPrice) : null;
+  const maxPrice = params.maxPrice ? parseFloat(params.maxPrice) : null;
+
   const supabase = await createSupabaseServerClient();
 
-  const { data: accounts } = await supabase
-    .from("public_accounts")
-    .select("*")
-    .order("created_at", { ascending: false });
+  // Build the accounts query with sort + price filter
+  let query = supabase.from("public_accounts").select("*");
 
+  if (minPrice !== null) query = query.gte("selling_price", minPrice);
+  if (maxPrice !== null) query = query.lte("selling_price", maxPrice);
+
+  switch (sort) {
+    case "price_asc":
+      query = query.order("selling_price", { ascending: true });
+      break;
+    case "price_desc":
+      query = query.order("selling_price", { ascending: false });
+      break;
+    case "gp_desc":
+      query = query.order("total_gp", { ascending: false });
+      break;
+    case "strength_desc":
+      query = query.order("team_strength", { ascending: false });
+      break;
+    default:
+      query = query.order("created_at", { ascending: false });
+  }
+
+  const { data: accounts } = await query;
+
+  // Sold accounts (always newest first, no filter)
   const { data: soldAccountsRaw } = await supabase
     .from("accounts")
     .select(
@@ -39,6 +77,7 @@ export default async function HomePage() {
 
   const items = (accounts ?? []) as PublicAccount[];
   const soldItems = (soldAccountsRaw ?? []) as PublicAccount[];
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <Header />
@@ -67,16 +106,19 @@ export default async function HomePage() {
 
         {/* Account Grid */}
         <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
-          <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
-            <div>
+          <div className="mb-6 sm:mb-8">
+            <div className="mb-4 flex flex-col gap-1">
               <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
                 Tài Khoản Đang Bán
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Tìm thấy {items.length} tài khoản đang sẵn sàng giao dịch
-              </p>
             </div>
+
+            {/* Filters — wrapped in Suspense for useSearchParams */}
+            <Suspense fallback={null}>
+              <AccountFilters totalCount={items.length} />
+            </Suspense>
           </div>
+
           {items.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((account) => (
@@ -87,10 +129,10 @@ export default async function HomePage() {
             <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 py-20">
               <Search className="mb-4 h-12 w-12 text-slate-300" />
               <h3 className="text-lg font-semibold text-slate-500">
-                Không có tài khoản nào
+                Không tìm thấy tài khoản nào
               </h3>
               <p className="mt-1 text-sm text-slate-400">
-                Hãy quay lại kiểm tra danh sách mới cập nhật sau nhé.
+                Thử thay đổi bộ lọc hoặc xoá bộ lọc để xem tất cả.
               </p>
             </div>
           )}

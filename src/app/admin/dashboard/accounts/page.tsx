@@ -5,16 +5,68 @@ import { StatusBadge } from "@/components/ui/Badge";
 import { formatCurrency } from "@/lib/constants";
 import { DeleteAccountButton } from "./DeleteButton";
 import { SellAccountButton } from "./SellButton";
+import { AdminAccountFilters } from "./AdminAccountFilters";
+import { Suspense } from "react";
 import type { AccountWithEmail } from "@/types/database";
 
-export default async function AccountsPage() {
+type SearchParams = {
+  sort?: string;
+  status?: string;
+  q?: string;
+};
+
+export default async function AccountsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+  const sort = params.sort ?? "newest";
+  const statusFilter = params.status ?? "";
+  const searchQuery = params.q ?? "";
+
   const supabase = await createSupabaseServerClient();
 
-  const { data: accounts } = await supabase
-    .from("accounts")
-    .select("*, emails(*)")
-    .order("created_at", { ascending: false });
+  let query = supabase.from("accounts").select("*, emails(*)");
 
+  // Filter by status
+  if (statusFilter) {
+    query = query.eq("status", statusFilter);
+  }
+
+  // Filter by search query (title)
+  if (searchQuery) {
+    query = query.ilike("title", `%${searchQuery}%`);
+  }
+
+  // Sort
+  switch (sort) {
+    case "oldest":
+      query = query.order("created_at", { ascending: true });
+      break;
+    case "price_asc":
+      query = query.order("selling_price", { ascending: true });
+      break;
+    case "price_desc":
+      query = query.order("selling_price", { ascending: false });
+      break;
+    case "purchase_asc":
+      query = query.order("purchase_price", { ascending: true });
+      break;
+    case "purchase_desc":
+      query = query.order("purchase_price", { ascending: false });
+      break;
+    case "gp_desc":
+      query = query.order("total_gp", { ascending: false });
+      break;
+    case "strength_desc":
+      query = query.order("team_strength", { ascending: false });
+      break;
+    default:
+      query = query.order("created_at", { ascending: false });
+  }
+
+  const { data: accounts } = await query;
   const items = (accounts ?? []) as AccountWithEmail[];
 
   return (
@@ -34,6 +86,13 @@ export default async function AccountsPage() {
         </Link>
       </div>
 
+      {/* Filters */}
+      <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <Suspense fallback={null}>
+          <AdminAccountFilters totalCount={items.length} />
+        </Suspense>
+      </div>
+
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -45,7 +104,6 @@ export default async function AccountsPage() {
                 <th className="px-6 py-3 font-medium text-slate-500">
                   Trạng Thái
                 </th>
-
                 <th className="px-6 py-3 font-medium text-slate-500">
                   Giá Nhập
                 </th>
@@ -79,7 +137,6 @@ export default async function AccountsPage() {
                   <td className="px-6 py-4">
                     <StatusBadge status={account.status} />
                   </td>
-
                   <td className="px-6 py-4 text-slate-600">
                     {formatCurrency(account.purchase_price)}
                   </td>
@@ -113,11 +170,10 @@ export default async function AccountsPage() {
               {items.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={7}
                     className="px-6 py-12 text-center text-slate-400"
                   >
-                    Chưa có tài khoản nào. Hãy tạo danh sách tài khoản game đầu
-                    tiên của bạn.
+                    Không tìm thấy tài khoản nào phù hợp với bộ lọc.
                   </td>
                 </tr>
               )}
