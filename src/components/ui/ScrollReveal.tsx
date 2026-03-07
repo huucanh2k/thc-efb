@@ -55,7 +55,7 @@ export function ScrollReveal({
     <div
       ref={ref}
       data-visible="false"
-      className={`w-full overflow-hidden opacity-0 ${translateClass} transition-all duration-700 ease-out data-[visible=true]:opacity-100 data-[visible=true]:translate-x-0 data-[visible=true]:translate-y-0 ${className}`}
+      className={`w-full overflow-hidden p-3 opacity-0 ${translateClass} transition-all duration-700 ease-out data-[visible=true]:opacity-100 data-[visible=true]:translate-x-0 data-[visible=true]:translate-y-0 ${className}`}
     >
       {children}
     </div>

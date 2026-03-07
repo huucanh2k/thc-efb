@@ -2,7 +2,6 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { AccountCard } from "@/components/storefront/AccountCard";
-import { SoldAccountCard } from "@/components/storefront/SoldAccountCard";
 import { AccountFilters } from "@/components/storefront/AccountFilters";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Gamepad2, Search, BadgeCheck } from "lucide-react";
@@ -166,7 +165,7 @@ export default async function HomePage({
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {soldItems.map((account, i) => (
                   <ScrollReveal key={account.id} delay={i * 80} distance="sm">
-                    <SoldAccountCard account={account} />
+                    <AccountCard account={account} />
                   </ScrollReveal>
                 ))}
               </div>
