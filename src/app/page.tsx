@@ -4,6 +4,7 @@ import { Footer } from "@/components/storefront/Footer";
 import { AccountCard } from "@/components/storefront/AccountCard";
 import { SoldAccountCard } from "@/components/storefront/SoldAccountCard";
 import { AccountFilters } from "@/components/storefront/AccountFilters";
+import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Gamepad2, Search, BadgeCheck } from "lucide-react";
 import { Suspense } from "react";
 import type { Metadata } from "next";
@@ -106,35 +107,38 @@ export default async function HomePage({
 
         {/* Account Grid */}
         <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
-          <div className="mb-6 sm:mb-8">
-            <div className="mb-4 flex flex-col gap-1">
-              <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
-                Tài Khoản Đang Bán
-              </h2>
-            </div>
+          <ScrollReveal direction="left" className="mb-4">
+            <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
+              Tài Khoản Đang Bán
+            </h2>
+          </ScrollReveal>
 
-            {/* Filters — wrapped in Suspense for useSearchParams */}
+          <ScrollReveal delay={120} className="mb-6 sm:mb-8">
             <Suspense fallback={null}>
               <AccountFilters totalCount={items.length} />
             </Suspense>
-          </div>
+          </ScrollReveal>
 
           {items.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((account) => (
-                <AccountCard key={account.id} account={account} />
+              {items.map((account, i) => (
+                <ScrollReveal key={account.id} delay={i * 80} distance="sm">
+                  <AccountCard account={account} />
+                </ScrollReveal>
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 py-20">
-              <Search className="mb-4 h-12 w-12 text-slate-300" />
-              <h3 className="text-lg font-semibold text-slate-500">
-                Không tìm thấy tài khoản nào
-              </h3>
-              <p className="mt-1 text-sm text-slate-400">
-                Thử thay đổi bộ lọc hoặc xoá bộ lọc để xem tất cả.
-              </p>
-            </div>
+            <ScrollReveal>
+              <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 py-20">
+                <Search className="mb-4 h-12 w-12 text-slate-300" />
+                <h3 className="text-lg font-semibold text-slate-500">
+                  Không tìm thấy tài khoản nào
+                </h3>
+                <p className="mt-1 text-sm text-slate-400">
+                  Thử thay đổi bộ lọc hoặc xoá bộ lọc để xem tất cả.
+                </p>
+              </div>
+            </ScrollReveal>
           )}
         </section>
 
@@ -142,9 +146,9 @@ export default async function HomePage({
         {soldItems.length > 0 && (
           <section className="border-t border-slate-200 bg-slate-100/60">
             <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
-              <div className="mb-6 flex flex-col gap-2 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <div className="mb-2 flex items-center gap-2">
+              <ScrollReveal direction="left" className="mb-6 sm:mb-8">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
                     <BadgeCheck className="h-5 w-5 text-emerald-500" />
                     <span className="text-xs font-semibold uppercase tracking-widest text-emerald-600">
                       Đã Giao Dịch Thành Công
@@ -158,10 +162,12 @@ export default async function HomePage({
                     của shop
                   </p>
                 </div>
-              </div>
+              </ScrollReveal>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {soldItems.map((account) => (
-                  <SoldAccountCard key={account.id} account={account} />
+                {soldItems.map((account, i) => (
+                  <ScrollReveal key={account.id} delay={i * 80} distance="sm">
+                    <SoldAccountCard account={account} />
+                  </ScrollReveal>
                 ))}
               </div>
             </div>
