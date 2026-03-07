@@ -2,7 +2,8 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { AccountCard } from "@/components/storefront/AccountCard";
-import { Gamepad2, Search } from "lucide-react";
+import { SoldAccountCard } from "@/components/storefront/SoldAccountCard";
+import { Gamepad2, Search, BadgeCheck } from "lucide-react";
 import type { PublicAccount } from "@/types/database";
 
 export const revalidate = 60;
@@ -15,7 +16,17 @@ export default async function HomePage() {
     .select("*")
     .order("created_at", { ascending: false });
 
+  const { data: soldAccountsRaw } = await supabase
+    .from("accounts")
+    .select(
+      "id, title, selling_price, images, primary_image_url, status, total_gp, total_coins_android, total_coins_ios, team_strength, created_at",
+    )
+    .eq("status", "Sold")
+    .order("updated_at", { ascending: false })
+    .limit(6);
+
   const items = (accounts ?? []) as PublicAccount[];
+  const soldItems = (soldAccountsRaw ?? []) as PublicAccount[];
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <Header />
@@ -34,8 +45,8 @@ export default async function HomePage() {
                   <span className="block text-indigo-400">Uy Tín, Giá Tốt</span>
                 </h1>
                 <p className="mx-auto mt-4 max-w-xl text-pretty text-base text-slate-300 sm:text-lg lg:mx-0">
-                  Chọn nhanh tài khoản phù hợp với ngân sách và lối chơi của bạn,
-                  cập nhật liên tục mỗi ngày.
+                  Chọn nhanh tài khoản phù hợp với ngân sách và lối chơi của
+                  bạn, cập nhật liên tục mỗi ngày.
                 </p>
               </div>
             </div>
@@ -72,6 +83,36 @@ export default async function HomePage() {
             </div>
           )}
         </section>
+
+        {/* Sold Accounts */}
+        {soldItems.length > 0 && (
+          <section className="border-t border-slate-200 bg-slate-100/60">
+            <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
+              <div className="mb-6 flex flex-col gap-2 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <BadgeCheck className="h-5 w-5 text-emerald-500" />
+                    <span className="text-xs font-semibold uppercase tracking-widest text-emerald-600">
+                      Đã Giao Dịch Thành Công
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
+                    Tài Khoản Đã Bán
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {soldItems.length} giao dịch thành công — minh chứng uy tín
+                    của shop
+                  </p>
+                </div>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {soldItems.map((account) => (
+                  <SoldAccountCard key={account.id} account={account} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
       <Footer />
     </div>

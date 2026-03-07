@@ -4,6 +4,7 @@ import { Plus, Pencil, Gamepad2 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/Badge";
 import { formatCurrency } from "@/lib/constants";
 import { DeleteAccountButton } from "./DeleteButton";
+import { SellAccountButton } from "./SellButton";
 import type { AccountWithEmail } from "@/types/database";
 
 export default async function AccountsPage() {
@@ -13,7 +14,7 @@ export default async function AccountsPage() {
     .from("accounts")
     .select("*, emails(*)")
     .order("created_at", { ascending: false });
-    
+
   const items = (accounts ?? []) as AccountWithEmail[];
 
   return (
@@ -99,6 +100,11 @@ export default async function AccountsPage() {
                       >
                         <Pencil className="h-4 w-4" />
                       </Link>
+                      <SellAccountButton
+                        id={account.id}
+                        currentSellingPrice={account.selling_price}
+                        status={account.status}
+                      />
                       <DeleteAccountButton id={account.id} />
                     </div>
                   </td>

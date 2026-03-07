@@ -1,18 +1,22 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import Link from "next/link";
-import { Plus, Mail, Pencil, Trash2 } from "lucide-react";
+import { Plus, Mail, Pencil, Link2, Link2Off } from "lucide-react";
 import { DeleteEmailButton } from "./DeleteButton";
 import type { Email } from "@/types/database";
+
+interface EmailWithAccount extends Email {
+  accounts: { id: string; title: string } | null;
+}
 
 export default async function EmailsPage() {
   const supabase = await createSupabaseServerClient();
 
   const { data: emails } = await supabase
     .from("emails")
-    .select("*")
+    .select("*, accounts(id, title)")
     .order("created_at", { ascending: false });
 
-  const items = (emails ?? []) as Email[];
+  const items = (emails ?? []) as EmailWithAccount[];
 
   return (
     <div>
@@ -46,6 +50,9 @@ export default async function EmailsPage() {
                   Thông tin khôi phục
                 </th>
                 <th className="px-6 py-3 font-medium text-slate-500">
+                  Trạng Thái Liên Kết
+                </th>
+                <th className="px-6 py-3 font-medium text-slate-500">
                   Hành Động
                 </th>
               </tr>
@@ -68,6 +75,28 @@ export default async function EmailsPage() {
                     {email.recovery_info || "—"}
                   </td>
                   <td className="px-6 py-4">
+                    {email.accounts ? (
+                      <div className="flex flex-col gap-1">
+                        <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                          <Link2 className="h-3 w-3" />
+                          Đã liên kết
+                        </span>
+                        <Link
+                          href={`/admin/dashboard/accounts/${email.accounts.id}/edit`}
+                          className="max-w-[160px] truncate text-xs text-slate-400 hover:text-indigo-600 hover:underline"
+                          title={email.accounts.title}
+                        >
+                          {email.accounts.title}
+                        </Link>
+                      </div>
+                    ) : (
+                      <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
+                        <Link2Off className="h-3 w-3" />
+                        Chưa liên kết
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/admin/dashboard/emails/${email.id}/edit`}
@@ -83,7 +112,7 @@ export default async function EmailsPage() {
               {items.length === 0 && (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-6 py-12 text-center text-slate-400"
                   >
                     Chưa có email nào. Hãy thêm email đầu tiên để bắt đầu.
